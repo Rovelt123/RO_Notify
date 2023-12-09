@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      height: 100%;
+      justify-content: flex-end; /* Updated this line */
+      align-items: center;
+    }
+
+    .rectangle {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: fit-content;
+      max-width: 350px;
+      margin: 8px;
+      padding-top: 9px;
+      padding-bottom: 9px; 
+      height: auto;
+      transform: scale(0);
+      border-radius: 5px;
+      color: white;
+      overflow: hidden;
+      border: 1px solid #0a0000;
+      animation: expand 1.0s forwards;
+  margin-left: auto;
+    }
+
+    .notification-text {
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      line-height: 1.3;
+      
+      padding: 0 16px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 16px;
+      animation: fade-in .65s ease-in forwards;
+    }
+    .notification-text i {
+      margin-right: 8px;
+    }
+
+    .danger {
+      background: radial-gradient(#fd1515, #680000);
+    }
+
+    .info {
+      background: radial-gradient(#0046a1, #002335); 
+    }
+
+    .success {
+      background: radial-gradient(#0a7a00, #054d00); 
+    }
+
+    .warning {
+      background: radial-gradient(#e66800, #8c4300); 
+    }
+
+    @keyframes scale-in {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 83%;
+      }
+    }
+
+    @keyframes expand {
+      0% {
+        opacity: 0;
+        transform: scale(0);
+      }
+
+      15% {
+        opacity: 63%;
+        transform: scale(1.05);
+      }
+
+      30% {
+        opacity: 69%;
+        transform: scale(0.95);
+      }
+
+      45% {
+        opacity: 73%;
+        transform: scale(1);
+      }
+
+      100% {
+        opacity: 83%;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes fade-in {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 93;
+      }
+    }
+
+    @keyframes scale-fade-out {
+    0% {
+        transform: scale(1.1);
+        opacity: 83%;
+    }
+
+    30%, 100% {
+        transform: scale(0);
+        opacity: 0;
+        box-shadow: 0 0 10px 0 rgba(0,0,0,.25);
+    }
+}
+
+
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div id="notification-container"></div>
+</div>
+
+<script>
+var selectedVoice = "Microsoft Mark - English (United States)";
+var selectedLang = "en-US";
+function createNotify(type, text, icon, time, color, tts) {
+  const notificationContainer = document.getElementById('notification-container');
+  if (!icon) {
+    switch (type) {
+      case 'danger':
+        icon = 'fa fa-times';
+        break;
+      case 'info':
+        icon = 'fas fa-info-circle';
+        break;
+      case 'success':
+        icon = 'fas fa-check-circle';
+        break;
+      case 'warning':
+        icon = 'fas fa-exclamation-triangle';
+        break;
+      default:
+        break;
+    }
+  }
+  if (!time) {
+    time = 10000;
+  }
+  const notificationElement = document.createElement('div');
+  notificationElement.className = 'rectangle';
+  notificationElement.classList.add(type);
+  if (color) {
+    const darkerColor = getDarkerColor(color);
+    notificationElement.style.background = `radial-gradient(${color}, ${darkerColor})`;
+  }
+  const iconElement = document.createElement('i');
+  iconElement.className = icon;
+  const textElement = document.createElement('span');
+  textElement.textContent = text;
+  const notificationTextElement = document.createElement('div');
+  notificationTextElement.className = 'notification-text';
+  notificationTextElement.appendChild(iconElement);
+  notificationTextElement.appendChild(textElement);
+  notificationElement.appendChild(notificationTextElement);
+  notificationContainer.appendChild(notificationElement);
+  notificationElement.style.display = 'flex';
+  if (tts === true) {
+      var textToSpeak = text;
+      var utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = selectedLang;
+      if (selectedVoice) {
+          utterance.voice = window.speechSynthesis.getVoices().find(function(voice) {
+              return voice.name === selectedVoice;
+          });
+      }
+      utterance.onend = function() {notificationElement.style.animation = 'scale-fade-out 2s ease-out forwards';
+        setTimeout(() => {
+          notificationContainer.removeChild(notificationElement);
+        }, 350);
+      };
+      speechSynthesis.speak(utterance);
+  }else {
+    setTimeout(() => {
+      notificationElement.style.animation = 'scale-fade-out 1s ease-out forwards';
+      setTimeout(() => {
+        notificationContainer.removeChild(notificationElement);
+      }, 350);
+    }, time);
+  }
+}
+
+function getDarkerColor(color) {
+  const hexColor = color.slice(1);
+  const bigint = parseInt(hexColor, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  const darkerR = Math.round(r * 0.6);
+  const darkerG = Math.round(g * 0.6);
+  const darkerB = Math.round(b * 0.6);
+  const darkerHex = `#${(1 << 24 | darkerR << 16 | darkerG << 8 | darkerB).toString(16).slice(1)}`;
+  return darkerHex;
+}
+
+window.addEventListener('message', function (event) {
+  if (event.data.type) {
+    createNotify(event.data.type, event.data.text, event.data.icon, event.data.time*1000, event.data.color, event.data.speak); 
+  }
+});
+
+</script>
+
+</body>
+</html>
