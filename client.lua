@@ -28,6 +28,7 @@ end)
 
 -- if you want to use it as an event:
 -- TriggerClientEvent("Rovelt:Notify", source, type, text, icon, time, color, tts)
+-- This is an example: 
 -- TriggerClientEvent("Rovelt:Notify", source, "warning", "This is with my own colors, icon, and time", "fa fa-battery-full", 60, "#02152e", false)
 
 -- THIS IS A UPDATE CHECKER!
